@@ -16,7 +16,7 @@ def parse_args():
     parser.add_argument('-i', '--images', type=str, nargs='+', required=True, help='directory of images')
     parser.add_argument('-s', '--save-path', type=str, default=None, help='path to save output')
 
-    parser.add_argument('-t', '--threshold', type=float, default=100.0, help='blurry threshold')
+    parser.add_argument('-t', '--threshold', type=float, default=45.0, help='blurry threshold')
     parser.add_argument('-f', '--variable-size', action='store_true', help='fix the image size')
 
     parser.add_argument('-v', '--verbose', action='store_true', help='set logging level to debug')
@@ -70,18 +70,28 @@ if __name__ == '__main__':
         logging.info(f'processing {image_path}')
 
         if fix_size:
-            image = fix_image_size(image)
+            image = fix_image_size(image) # convert to 2E6
         else:
             logging.warning('not normalizing image size for consistent scoring!')
 
         blur_map, score, blurry = estimate_blur(image, threshold=args.threshold)
-
+        print(blur_map[50:330, 399:402].sum())
+        if (blurry is False and blur_map[50:330, 399:402].sum() > 8000):
+            blurry = True
         logging.info(f'image_path: {image_path} score: {score} blurry: {blurry}')
+        # if(score < 45):
+        logging.info(f'score: {score}')
         results.append({'input_path': str(image_path), 'score': score, 'blurry': blurry})
 
         if args.display:
+            cv2.namedWindow('input',0)
+            cv2.resizeWindow('input', 500, 500)
+            cv2.namedWindow('result',0)
+            cv2.resizeWindow('result', 500, 500)
             cv2.imshow('input', image)
             cv2.imshow('result', pretty_blur_map(blur_map))
+            cv2.imshow('result', pretty_blur_map(blur_map))
+
 
             if cv2.waitKey(0) == ord('q'):
                 logging.info('exiting...')
