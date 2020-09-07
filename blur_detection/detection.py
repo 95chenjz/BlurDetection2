@@ -11,9 +11,11 @@ def fix_image_size(image: numpy.array, expected_pixels: float = 2E6):
 
 def estimate_blur(image: numpy.array, threshold: int = 100):
     if image.ndim == 3:
+        image = cv2.GaussianBlur(image, (3,3), 0)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    blur_map = cv2.Laplacian(image, cv2.CV_64F)
+    blur_map = cv2.Laplacian(image, cv2.CV_16U, ksize=1)
+    # print(blur_map.shape)
     score = numpy.var(blur_map)
     return blur_map, score, bool(score < threshold)
 
